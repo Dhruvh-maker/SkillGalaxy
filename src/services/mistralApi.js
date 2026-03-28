@@ -4,7 +4,7 @@ import axios from 'axios';
  * Generates a career roadmap using our secure serverless backend
  * @param {string} goal - The user's career goal
  */
-export async function generateRoadmap(goal) {
+export async function generateRoadmap(goal, options = {}) {
   // Now pointing to our internal route in production or dev
   const API_URL = '/api/generate';
 
