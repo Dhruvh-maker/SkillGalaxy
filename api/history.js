@@ -1,5 +1,5 @@
-import dbConnect from '../src/lib/db';
-import Roadmap from '../src/models/Roadmap';
+import dbConnect from '../src/lib/db.js';
+import Roadmap from '../src/models/Roadmap.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

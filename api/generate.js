@@ -1,7 +1,8 @@
-import dbConnect from '../src/lib/db';
-import Roadmap from '../src/models/Roadmap';
+import dbConnect from '../src/lib/db.js';
+import Roadmap from '../src/models/Roadmap.js';
 
 export default async function handler(req, res) {
+  // 1. Health check or wrong method
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
@@ -13,44 +14,17 @@ export default async function handler(req, res) {
 
   const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
   if (!MISTRAL_API_KEY) {
-    return res.status(500).json({ message: 'MISTRAL_API_KEY is not configured on the server' });
+    return res.status(500).json({ message: 'MISTRAL_API_KEY missing on server' });
   }
 
   const systemPrompt = `
 You are a career planning assistant. Given a user's career goal, generate a structured learning roadmap.
-
-Return ONLY a valid JSON object with this exact structure:
-{
-  "skills": [
-    {
-      "id": 1,
-      "name": "Skill Name",
-      "description": "A brief 1-2 sentence description of what this skill covers and why it matters.",
-      "difficulty": "beginner",
-      "estimated_hours": 40,
-      "resources": [
-        { "title": "Resource Name", "url": "https://example.com" },
-        { "title": "Another Resource", "url": "https://example2.com" }
-      ]
-    }
-  ],
-  "connections": [
-    { "from": 1, "to": 2 },
-    { "from": 2, "to": 3 }
-  ]
-}
-
-Requirements:
-- Each skill should have a unique numeric id (starting from 1)
-- Each skill MUST include: name, description, difficulty (one of: "beginner", "intermediate", "advanced"), estimated_hours, and resources
-- The roadmap should be comprehensive but not too large (aim for 8-12 skills)
-- Suggest a coherent, step-by-step learning path.
+Return ONLY a valid JSON object with "skills" and "connections".
   `.trim();
 
-  const userPrompt = `Generate a roadmap for: ${goal}`;
-
   try {
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    // 2. Call Mistral AI
+    const apiResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -61,41 +35,46 @@ Requirements:
         model: 'mistral-small-latest',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: 'user', content: `Generate a roadmap for: ${goal}` }
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.7,
-        max_tokens: 4000
+        temperature: 0.7
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return res.status(response.status).json({ message: errorData?.message || 'Mistral API error' });
+    if (!apiResponse.ok) {
+      const errorText = await apiResponse.text();
+      return res.status(apiResponse.status).json({ message: `Mistral Error: ${errorText}` });
     }
 
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-    const roadmap = JSON.parse(content);
+    const data = await apiResponse.json();
+    const roadmap = JSON.parse(data.choices[0].message.content);
     
-    // Save to MongoDB
+    // 3. Optional DB Save - Important: Don't let DB failure block the response!
     try {
-      await dbConnect();
-      await Roadmap.create({ goal, roadmap });
-      console.log('Roadmap saved to database');
-    } catch (dbError) {
-      console.error('Database Save Error:', dbError.message);
-      // We don't fail the entire request if DB save fails, 
-      // but let's log it for debugging
+      // Set a small timeout for DB to prevent hanging
+      const dbPromise = dbConnect().then(() => Roadmap.create({ goal, roadmap }));
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('DB Timeout')), 5000)
+      );
+      
+      // Fire and forget (mostly), we don't 'await' it if we want speed
+      Promise.race([dbPromise, timeoutPromise])
+        .then(() => console.log('Successfully saved to DB'))
+        .catch(err => console.error('Silent DB Error:', err.message));
+
+    } catch (silentErr) {
+      console.error('Initial DB Setup Error:', silentErr.message);
     }
     
+    // 4. Return the roadmap regardless of DB status
     return res.status(200).json(roadmap);
+
   } catch (error) {
-    console.error('Serverless Function Error:', error);
-    // Return the actual error message to the frontend for diagnosis
+    console.error('Final API Error:', error);
     return res.status(500).json({ 
-      message: error.message || 'Internal Server Error',
-      error: error.stack // Temporary debug info
+      message: 'Server failed to generate roadmap',
+      details: error.message 
     });
   }
 }
