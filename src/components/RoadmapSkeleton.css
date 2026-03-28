@@ -1,0 +1,115 @@
+/* ===== Roadmap Skeleton Animations ===== */
+
+.roadmap-skeleton-section {
+  padding: var(--spacing-xl) 0;
+  background: var(--bg-primary);
+  min-height: 800px;
+  position: relative;
+  overflow: hidden;
+  animation: skeletonFadeIn 0.8s ease-out;
+}
+
+@keyframes skeletonFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.roadmap-skeleton-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 4rem;
+}
+
+.skeleton-title {
+  width: 400px;
+  max-width: 80%;
+  height: 48px;
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  animation: gridPulse 2s infinite ease-in-out;
+}
+
+.skeleton-subtitle {
+  width: 300px;
+  max-width: 60%;
+  height: 20px;
+  background: var(--glass-bg);
+  border-radius: var(--radius-sm);
+  animation: gridPulse 2s infinite ease-in-out 0.2s;
+}
+
+/* Base glowing pulse animation */
+@keyframes gridPulse {
+  0% { opacity: 0.3; background: rgba(255, 255, 255, 0.05); }
+  50% { opacity: 0.7; background: rgba(99, 102, 241, 0.15); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
+  100% { opacity: 0.3; background: rgba(255, 255, 255, 0.05); }
+}
+
+.skeleton-node-wrapper {
+  /* Override the default invisible state since skeletons start visible */
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Stagger the pulse animation based on the flex order delay */
+.skeleton-card {
+  animation: gridPulse 2s infinite ease-in-out;
+  animation-delay: var(--delay);
+  border-color: rgba(99, 102, 241, 0.2);
+  pointer-events: none;
+}
+
+/* Color the connecting road segment under the skeleton */
+.skeleton-node-wrapper::before {
+  background: rgba(99, 102, 241, 0.1) !important;
+  box-shadow: none !important;
+}
+
+/* Color the milestone dots */
+.skeleton-card::before {
+  background: rgba(99, 102, 241, 0.2) !important;
+  box-shadow: none !important;
+  animation: gridPulse 2s infinite ease-in-out;
+  animation-delay: var(--delay);
+}
+
+.skeleton-pill {
+  width: 80px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+}
+.skeleton-pill.small {
+  width: 50px;
+}
+
+.skeleton-text-block {
+  width: 100%;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  margin-top: 1rem;
+}
+
+.skeleton-text-block.short {
+  width: 60%;
+  height: 14px;
+  margin-top: 0.5rem;
+}
+
+.skeleton-connector {
+  opacity: 0.3;
+  animation: gridPulse 2s infinite ease-in-out;
+  animation-delay: var(--delay);
+}
+
+@media (max-width: 768px) {
+  .roadmap-skeleton-header {
+    margin-bottom: 2rem;
+  }
+  .skeleton-title {
+    height: 36px;
+  }
+}
