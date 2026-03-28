@@ -82,14 +82,20 @@ Requirements:
     try {
       await dbConnect();
       await Roadmap.create({ goal, roadmap });
+      console.log('Roadmap saved to database');
     } catch (dbError) {
-      console.error('Database Save Error:', dbError);
-      // We don't fail the entire request if DB save fails, just report it
+      console.error('Database Save Error:', dbError.message);
+      // We don't fail the entire request if DB save fails, 
+      // but let's log it for debugging
     }
     
     return res.status(200).json(roadmap);
   } catch (error) {
     console.error('Serverless Function Error:', error);
-    return res.status(500).json({ message: error.message || 'Internal Server Error' });
+    // Return the actual error message to the frontend for diagnosis
+    return res.status(500).json({ 
+      message: error.message || 'Internal Server Error',
+      error: error.stack // Temporary debug info
+    });
   }
 }
