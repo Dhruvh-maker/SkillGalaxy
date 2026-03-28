@@ -1,16 +1,30 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useRoadmapStore from '../store/useRoadmapStore';
-import { Trash2, ExternalLink, CalendarDays, Map } from 'lucide-react';
+import { Trash2, ExternalLink, CalendarDays, Map, Loader2 } from 'lucide-react';
 import './Dashboard.css';
 
 function Dashboard() {
-  const { history, clearHistory, loadFromHistory } = useRoadmapStore();
+  const { history, isLoadingHistory, fetchHistory, clearHistory, loadFromHistory } = useRoadmapStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   const handleLoadRoadmap = (entry) => {
     loadFromHistory(entry);
     navigate('/generator');
   };
+
+  if (isLoadingHistory && history.length === 0) {
+    return (
+      <div className="dashboard-page container loading-state">
+        <Loader2 size={48} className="spinner" />
+        <p>Fetching your roadmaps from the galaxy...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-page container">
@@ -40,7 +54,7 @@ function Dashboard() {
       ) : (
         <div className="history-grid">
           {history.map((entry) => (
-            <div key={entry.id} className="history-card" onClick={() => handleLoadRoadmap(entry)}>
+            <div key={entry._id || entry.id} className="history-card" onClick={() => handleLoadRoadmap(entry)}>
               <div className="history-card-header">
                 <h3>{entry.goal}</h3>
                 <span className="history-date">

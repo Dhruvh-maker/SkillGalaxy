@@ -1,21 +1,14 @@
 import { create } from 'zustand';
+import axios from 'axios';
 
 const PROGRESS_KEY = 'skillgalaxy-progress';
-const HISTORY_KEY = 'skillgalaxy-history';
 
-// Load from localStorage
+// Load from localStorage (Keep progress local for now, history in DB)
 const loadProgress = () => {
   try {
     const saved = localStorage.getItem(PROGRESS_KEY);
     return saved ? JSON.parse(saved) : {};
   } catch { return {}; }
-};
-
-const loadHistory = () => {
-  try {
-    const saved = localStorage.getItem(HISTORY_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch { return []; }
 };
 
 const useRoadmapStore = create((set, get) => ({
@@ -26,8 +19,9 @@ const useRoadmapStore = create((set, get) => ({
   // Progress: { [goalKey]: { [skillId]: 'completed' | 'in-progress' | 'skipped' } }
   progress: loadProgress(),
 
-  // History: [{ goal, roadmap, createdAt }]
-  history: loadHistory(),
+  // History: [{ goal, roadmap, createdAt }] - Now fetched from MongoDB
+  history: [],
+  isLoadingHistory: false,
 
   // Currently selected skill for detail modal
   selectedSkill: null,
@@ -35,18 +29,18 @@ const useRoadmapStore = create((set, get) => ({
   // Actions
   setRoadmap: (roadmap, goal) => {
     set({ roadmap, goal });
+    // After generation, refresh history from DB
+    get().fetchHistory();
+  },
 
-    // Save to history
-    if (roadmap && goal) {
-      const entry = {
-        id: Date.now(),
-        goal,
-        roadmap,
-        createdAt: new Date().toISOString(),
-      };
-      const history = [entry, ...get().history.slice(0, 19)]; // Keep last 20
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-      set({ history });
+  fetchHistory: async () => {
+    set({ isLoadingHistory: true });
+    try {
+      const response = await axios.get('/api/history');
+      set({ history: response.data, isLoadingHistory: false });
+    } catch (error) {
+      console.error('Failed to fetch history:', error);
+      set({ isLoadingHistory: false });
     }
   },
 
@@ -90,8 +84,8 @@ const useRoadmapStore = create((set, get) => ({
     return { completed, inProgress, skipped, total, percent };
   },
 
+  // Note: clearHistory for DB would require a DELETE API, for now we just clear local state
   clearHistory: () => {
-    localStorage.removeItem(HISTORY_KEY);
     set({ history: [] });
   },
 

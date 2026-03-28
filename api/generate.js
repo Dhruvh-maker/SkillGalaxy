@@ -1,3 +1,6 @@
+import dbConnect from '../src/lib/db';
+import Roadmap from '../src/models/Roadmap';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
@@ -38,17 +41,10 @@ Return ONLY a valid JSON object with this exact structure:
 }
 
 Requirements:
-- Create a logical progression of skills needed to achieve the goal
 - Each skill should have a unique numeric id (starting from 1)
-- Each skill MUST include: name, description, difficulty (one of: "beginner", "intermediate", "advanced"), estimated_hours (realistic number), and resources (2 real, working learning resource URLs like MDN, freeCodeCamp, YouTube channels, official docs, Coursera, etc.)
-- Connections indicate which skills depend on which (from prerequisite to dependent)
+- Each skill MUST include: name, description, difficulty (one of: "beginner", "intermediate", "advanced"), estimated_hours, and resources
 - The roadmap should be comprehensive but not too large (aim for 8-12 skills)
-- Skill names should be concise and clear (e.g., "HTML Basics", "React Hooks")
-- Order skills so that prerequisites come before skills that build on them
-- If the goal is ambiguous, make reasonable assumptions about a standard path
-- Resources should be real, well-known learning platforms — never make up URLs
-
-Suggest a coherent, step-by-step learning path that a beginner would follow.
+- Suggest a coherent, step-by-step learning path.
   `.trim();
 
   const userPrompt = `Generate a roadmap for: ${goal}`;
@@ -81,6 +77,15 @@ Suggest a coherent, step-by-step learning path that a beginner would follow.
     const data = await response.json();
     const content = data.choices[0].message.content;
     const roadmap = JSON.parse(content);
+    
+    // Save to MongoDB
+    try {
+      await dbConnect();
+      await Roadmap.create({ goal, roadmap });
+    } catch (dbError) {
+      console.error('Database Save Error:', dbError);
+      // We don't fail the entire request if DB save fails, just report it
+    }
     
     return res.status(200).json(roadmap);
   } catch (error) {
