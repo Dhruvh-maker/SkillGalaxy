@@ -11,7 +11,7 @@ export async function generateRoadmap(goal) {
   try {
     const response = await axios.post(
       API_URL,
-      { goal },
+      { goal, options },
       {
         timeout: 45000, // Slightly longer timeout for serverless overhead
         headers: {

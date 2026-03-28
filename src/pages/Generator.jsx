@@ -12,6 +12,13 @@ function Generator({ theme, toggleTheme }) {
   const [localGoal, setLocalGoal] = useState(storeGoal || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Advanced Options
+  const [options, setOptions] = useState({
+    difficulty: 'beginner',
+    time: 'balanced',
+    focus: 'practical'
+  });
 
   const handleGenerate = async () => {
     if (!localGoal.trim()) {
@@ -21,7 +28,7 @@ function Generator({ theme, toggleTheme }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await generateRoadmap(localGoal);
+      const data = await generateRoadmap(localGoal, options);
       setRoadmap(data, localGoal);
     } catch (e) {
       setError(e.message);
@@ -47,6 +54,8 @@ function Generator({ theme, toggleTheme }) {
         loading={loading}
         error={error}
         onGenerate={handleGenerate}
+        options={options}
+        setOptions={setOptions}
       />
       
       {loading ? (

@@ -1,6 +1,17 @@
 import GoalInput from './GoalInput';
+import AdvancedOptions from './AdvancedOptions';
 
-function Hero({ theme, toggleTheme, goal, setGoal, loading, error, onGenerate }) {
+function Hero({ 
+  theme, 
+  toggleTheme, 
+  goal, 
+  setGoal, 
+  loading, 
+  error, 
+  onGenerate,
+  options,
+  setOptions
+}) {
   return (
     <section className="hero">
       <div className="hero-background">
@@ -28,6 +39,12 @@ function Hero({ theme, toggleTheme, goal, setGoal, loading, error, onGenerate })
           onSubmit={onGenerate}
           isLoading={loading}
           error={error}
+        />
+
+        <AdvancedOptions 
+          options={options} 
+          setOptions={setOptions} 
+          disabled={loading} 
         />
 
         <div className="trending-topics">

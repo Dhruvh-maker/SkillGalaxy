@@ -7,10 +7,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { goal } = req.body;
+  const { goal, options = {} } = req.body;
+  
   if (!goal) {
     return res.status(400).json({ message: 'Career goal is required' });
   }
+
+  // Personalization settings
+  const difficulty = options.difficulty || 'beginner';
+  const time = options.time || 'balanced';
+  const focus = options.focus || 'practical';
 
   const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
   if (!MISTRAL_API_KEY) {
@@ -18,7 +24,12 @@ export default async function handler(req, res) {
   }
 
   const systemPrompt = `
-You are a career planning assistant. Given a user's career goal, generate a structured learning roadmap.
+You are a world-class career planning AI. Generate a professional learning roadmap for a ${difficulty}-level learner.
+The user's goal is: "${goal}"
+  
+Constraints:
+- Timeline: ${time === 'fast' ? 'Aggressive 4-week fast-track.' : time === 'detailed' ? 'Long-term 6-month deep dive.' : 'Standard 3-month balanced pace.'}
+- Focus: ${focus === 'theoretical' ? 'Academic concepts and deep theory.' : focus === 'interview' ? 'Common technical interview questions and competitive prep.' : 'Hands-on practical projects and industry tools.'}
 
 Return ONLY a valid JSON object with this exact structure:
 {
@@ -26,26 +37,14 @@ Return ONLY a valid JSON object with this exact structure:
     {
       "id": 1,
       "name": "Skill Name",
-      "description": "A brief 1-2 sentence description of what this skill covers and why it matters.",
-      "difficulty": "beginner",
+      "description": "Brief description tailored to ${difficulty} level.",
+      "difficulty": "${difficulty}",
       "estimated_hours": 40,
-      "resources": [
-        { "title": "Resource Name", "url": "https://example.com" },
-        { "title": "Another Resource", "url": "https://example2.com" }
-      ]
+      "resources": [{ "title": "Resource Name", "url": "https://example.com" }]
     }
   ],
-  "connections": [
-    { "from": 1, "to": 2 },
-    { "from": 2, "to": 3 }
-  ]
+  "connections": [{ "from": 1, "to": 2 }]
 }
-
-Requirements:
-- Each skill should have a unique numeric id (starting from 1)
-- Each skill MUST include: name, description, difficulty (one of: "beginner", "intermediate", "advanced"), estimated_hours, and resources
-- The roadmap should be comprehensive but not too large (aim for 8-12 skills)
-- Suggest a coherent, step-by-step learning path.
   `.trim();
 
   try {
