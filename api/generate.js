@@ -76,24 +76,16 @@ Requirements:
     const data = await apiResponse.json();
     const roadmap = JSON.parse(data.choices[0].message.content);
     
-    // 3. Optional DB Save - Important: Don't let DB failure block the response!
+    // 3. Save to MongoDB (Awaited for consistency)
     try {
-      // Set a small timeout for DB to prevent hanging
-      const dbPromise = dbConnect().then(() => Roadmap.create({ goal, roadmap }));
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('DB Timeout')), 5000)
-      );
-      
-      // Fire and forget (mostly), we don't 'await' it if we want speed
-      Promise.race([dbPromise, timeoutPromise])
-        .then(() => console.log('Successfully saved to DB'))
-        .catch(err => console.error('Silent DB Error:', err.message));
-
-    } catch (silentErr) {
-      console.error('Initial DB Setup Error:', silentErr.message);
+      await dbConnect();
+      await Roadmap.create({ goal, roadmap });
+      console.log('Successfully saved to DB');
+    } catch (dbError) {
+      console.error('DB Error:', dbError.message);
+      // Even if DB fails, we return the roadmap to keep the user happy
     }
     
-    // 4. Return the roadmap regardless of DB status
     return res.status(200).json(roadmap);
 
   } catch (error) {

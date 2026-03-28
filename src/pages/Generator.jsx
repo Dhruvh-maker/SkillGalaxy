@@ -7,11 +7,11 @@ import { generateRoadmap } from '../services/mistralApi';
 import useRoadmapStore from '../store/useRoadmapStore';
 
 function Generator({ theme, toggleTheme }) {
-  const [localGoal, setLocalGoal] = useState('');
+  const { setRoadmap, roadmap, goal: storeGoal } = useRoadmapStore();
+  
+  const [localGoal, setLocalGoal] = useState(storeGoal || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  const { setRoadmap, roadmap } = useRoadmapStore();
 
   const handleGenerate = async () => {
     if (!localGoal.trim()) {
@@ -30,13 +30,12 @@ function Generator({ theme, toggleTheme }) {
     }
   };
 
-  // Sync loaded history goal back to localGoal input
+  // Sync loaded history goal back to localGoal input when roadmap changes
   useEffect(() => {
-    const storeGoal = useRoadmapStore.getState().goal;
     if (storeGoal && storeGoal !== localGoal) {
       setLocalGoal(storeGoal);
     }
-  }, [roadmap]);
+  }, [roadmap, storeGoal]);
 
   return (
     <div className="generator-page">
