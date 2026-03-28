@@ -19,7 +19,33 @@ export default async function handler(req, res) {
 
   const systemPrompt = `
 You are a career planning assistant. Given a user's career goal, generate a structured learning roadmap.
-Return ONLY a valid JSON object with "skills" and "connections".
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "skills": [
+    {
+      "id": 1,
+      "name": "Skill Name",
+      "description": "A brief 1-2 sentence description of what this skill covers and why it matters.",
+      "difficulty": "beginner",
+      "estimated_hours": 40,
+      "resources": [
+        { "title": "Resource Name", "url": "https://example.com" },
+        { "title": "Another Resource", "url": "https://example2.com" }
+      ]
+    }
+  ],
+  "connections": [
+    { "from": 1, "to": 2 },
+    { "from": 2, "to": 3 }
+  ]
+}
+
+Requirements:
+- Each skill should have a unique numeric id (starting from 1)
+- Each skill MUST include: name, description, difficulty (one of: "beginner", "intermediate", "advanced"), estimated_hours, and resources
+- The roadmap should be comprehensive but not too large (aim for 8-12 skills)
+- Suggest a coherent, step-by-step learning path.
   `.trim();
 
   try {
