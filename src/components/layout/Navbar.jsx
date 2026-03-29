@@ -1,4 +1,5 @@
-import { LogIn, LogOut, UserPlus, User } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { LogIn, LogOut, UserPlus, User, Rocket, Sparkles, FolderKanban } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import ThemeToggle from '../ThemeToggle';
 import './Navbar.css';
