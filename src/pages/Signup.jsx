@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, ArrowRight, Github, Globe } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Globe } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import './Auth.css';
 
@@ -98,7 +98,7 @@ function Signup() {
         </div>
 
         <div className="auth-social">
-          <button className="social-btn"><Github size={20} /> Github</button>
+          <button className="social-btn">Github</button>
           <button className="social-btn"><Globe size={20} /> Google</button>
         </div>
 
