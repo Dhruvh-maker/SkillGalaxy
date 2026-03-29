@@ -1,10 +1,11 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Rocket, Sparkles, FolderKanban } from 'lucide-react';
+import { LogIn, LogOut, UserPlus, User } from 'lucide-react';
+import useAuthStore from '../../store/useAuthStore';
 import ThemeToggle from '../ThemeToggle';
 import './Navbar.css';
 
 function Navbar({ theme, toggleTheme }) {
   const location = useLocation();
+  const { isAuthenticated, logout, user } = useAuthStore();
 
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
@@ -32,7 +33,24 @@ function Navbar({ theme, toggleTheme }) {
           </Link>
         </div>
 
-        <div className="navbar-actions">
+        <div className="navbar-auth">
+          {isAuthenticated ? (
+            <div className="user-profile">
+              <span className="user-name"><User size={14} /> {user?.name}</span>
+              <button onClick={logout} className="logout-btn">
+                <LogOut size={16} /> Logout
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link to="/login" className="login-link">
+                <LogIn size={16} /> Login
+              </Link>
+              <Link to="/signup" className="signup-btn">
+                <UserPlus size={16} /> Sign Up
+              </Link>
+            </>
+          )}
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
         </div>
       </div>

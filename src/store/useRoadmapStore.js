@@ -34,9 +34,14 @@ const useRoadmapStore = create((set, get) => ({
   },
 
   fetchHistory: async () => {
+    const token = localStorage.getItem('skillgalaxy-token');
+    if (!token) return;
+
     set({ isLoadingHistory: true });
     try {
-      const response = await axios.get('/api/history');
+      const response = await axios.get('/api/history', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       set({ history: response.data, isLoadingHistory: false });
     } catch (error) {
       console.error('Failed to fetch history:', error);

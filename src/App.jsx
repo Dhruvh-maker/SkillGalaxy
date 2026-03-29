@@ -1,22 +1,29 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
 import Generator from './pages/Generator';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import useAuthStore from './store/useAuthStore';
 import './App.css';
 
 function App() {
+  const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
+  
   // Theme state
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('skillgalaxy-theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return saved || (prefersDark ? 'dark' : 'dark');
+      return localStorage.getItem('skillgalaxy-theme') || 'dark';
     }
     return 'dark';
   });
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -27,15 +34,27 @@ function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
+  if (isLoading) {
+    return <div className="loading-screen">Loading SkillGalaxy...</div>;
+  }
+
   return (
     <BrowserRouter>
-      <div className="app">
+      <div className="app" data-theme={theme}>
         <Navbar theme={theme} toggleTheme={toggleTheme} />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/generator" element={<Generator theme={theme} toggleTheme={toggleTheme} />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route 
+              path="/generator" 
+              element={isAuthenticated ? <Generator theme={theme} toggleTheme={toggleTheme} /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/dashboard" 
+              element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+            />
           </Routes>
         </main>
         <Footer />
@@ -45,4 +64,3 @@ function App() {
 }
 
 export default App;
-

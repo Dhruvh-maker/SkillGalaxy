@@ -9,14 +9,16 @@ export async function generateRoadmap(goal, options = {}) {
   const API_URL = '/api/generate';
 
   try {
+    const token = localStorage.getItem('skillgalaxy-token');
     const response = await axios.post(
       API_URL,
       { goal, options },
       {
-        timeout: 45000, // Slightly longer timeout for serverless overhead
+        timeout: 45000, 
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
         }
       }
     );

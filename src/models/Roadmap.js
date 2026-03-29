@@ -18,6 +18,11 @@ const ConnectionSchema = new mongoose.Schema({
 });
 
 const RoadmapSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   goal: {
     type: String,
     required: true,

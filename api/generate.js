@@ -1,8 +1,23 @@
 import dbConnect from '../src/lib/db.js';
 import Roadmap from '../src/models/Roadmap.js';
+import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
-  // 1. Health check or wrong method
+  // 1. Auth Check - Require JWT
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
+  let userId;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    userId = decoded.id;
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+
+  // 2. Health check or wrong method
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
@@ -78,7 +93,11 @@ Return ONLY a valid JSON object with this exact structure:
     // 3. Save to MongoDB (Awaited for consistency)
     try {
       await dbConnect();
-      await Roadmap.create({ goal, roadmap });
+      await Roadmap.create({ 
+        userId, 
+        goal, 
+        roadmap 
+      });
       console.log('Successfully saved to DB');
     } catch (dbError) {
       console.error('DB Error:', dbError.message);
